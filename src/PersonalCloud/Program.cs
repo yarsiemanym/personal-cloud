@@ -16,7 +16,7 @@ namespace PersonalCloud
                 .Build();
 
             var app = new App();
-            var stack = new PersonalSecOpsStack(configuration, app, "PersonalCloudStack");
+            var stack = new PersonalCloudStack(configuration, app, "PersonalCloudStack");
             app.Synth();
         }
     }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalSecOps", "PersonalSecOps\PersonalSecOps.csproj", "{EFA474FA-946B-488D-B2F0-5A5C0DC7E1FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalCloud", "PersonalCloud\PersonalCloud.csproj", "{EFA474FA-946B-488D-B2F0-5A5C0DC7E1FD}"
 EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
