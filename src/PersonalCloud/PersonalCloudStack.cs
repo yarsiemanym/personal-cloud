@@ -95,20 +95,26 @@ namespace PersonalCloud
             securityGroup.AddEgressRule(EC2.Peer.AnyIpv4(), EC2.Port.AllTraffic(), "All traffic");
             securityGroup.AddIngressRule(EC2.Peer.AnyIpv4(), EC2.Port.Tcp(port), "MySQL");
 
+            var engine = RDS.DatabaseInstanceEngine.Mysql(new RDS.MySqlInstanceEngineProps
+            {
+                Version = RDS.MysqlEngineVersion.VER_8_0_19
+
+            });
+
             var database = new RDS.DatabaseInstance(this, "PersonalCloudRdsMySqlInstance", new RDS.DatabaseInstanceProps
             {
                 AllocatedStorage = allocatedStorage,
                 BackupRetention = Duration.Days(backupRetentionDays),
                 DatabaseName = databaseName,
                 DeletionProtection = false,
-                Engine = RDS.DatabaseInstanceEngine.MYSQL,
-                EngineVersion = "8.0.16",
-                InstanceClass = EC2.InstanceType.Of(instanceClass, instanceSize),
+                Engine = engine,
+                InstanceType = EC2.InstanceType.Of(instanceClass, instanceSize),
                 MasterUsername = userName,
                 MasterUserPassword = password.SecretValue,
                 ParameterGroup = new RDS.ParameterGroup(this, "PersonalCloudRdsMySqlParamGroup", new RDS.ParameterGroupProps
                 {
-                    Family = "mysql8.0",
+
+                    Engine = engine,
                     Parameters = new Dictionary<string, string>
                     {
                         // Enable MySQL 4-byte support
