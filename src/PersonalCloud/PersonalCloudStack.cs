@@ -26,7 +26,7 @@ namespace PersonalCloud
             var (database, databasePassword) = CreateMySQL(vpc);
             var nextcloud = CreateNextcloud(database, databasePassword, ecsCluster, zone);
         }
-        
+
         private EC2.IVpc CreateVpc()
         {
             var vpc = new EC2.Vpc(this, "PersonalCloudVpc", new EC2.VpcProps
