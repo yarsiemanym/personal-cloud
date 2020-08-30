@@ -9,13 +9,13 @@ using R53 = Amazon.CDK.AWS.Route53;
 using SM = Amazon.CDK.AWS.SecretsManager;
 using Microsoft.Extensions.Configuration;
 
-namespace PersonalSecOps
+namespace PersonalCloud
 {
-    public class PersonalSecOpsStack : Stack
+    public class PersonalCloudStack : Stack
     {
         private readonly IConfiguration _configuration;
 
-        internal PersonalSecOpsStack(IConfiguration configuration, Construct scope, string id, IStackProps props = null) : base(scope, id, props)
+        internal PersonalCloudStack(IConfiguration configuration, Construct scope, string id, IStackProps props = null) : base(scope, id, props)
         {
             _configuration = configuration;
 
@@ -26,12 +26,10 @@ namespace PersonalSecOps
             var (database, databasePassword) = CreateMySQL(vpc);
             var nextcloud = CreateNextcloud(database, databasePassword, ecsCluster, zone);
         }
-
-        #region General Infrastructure
-
+        
         private EC2.IVpc CreateVpc()
         {
-            var vpc = new EC2.Vpc(this, "PersonalSecOpsVpc", new EC2.VpcProps
+            var vpc = new EC2.Vpc(this, "PersonalCloudVpc", new EC2.VpcProps
             {
 
             });
@@ -43,7 +41,7 @@ namespace PersonalSecOps
         {
             var domainName = _configuration.GetValue<string>("AWS:Route53:DomainName");
 
-            var zone = new R53.PublicHostedZone(this, "PersonalSecOpsR53Zone", new R53.PublicHostedZoneProps
+            var zone = new R53.PublicHostedZone(this, "PersonalCloudR53Zone", new R53.PublicHostedZoneProps
             {
                 ZoneName = domainName
             });
@@ -53,23 +51,19 @@ namespace PersonalSecOps
 
         private ECS.ICluster CreateEcsCluster(EC2.IVpc vpc)
         {
-            var ecsCluster = new ECS.Cluster(this, "PersonalSecOpsEcs", new ECS.ClusterProps
+            var ecsCluster = new ECS.Cluster(this, "PersonalCloudEcs", new ECS.ClusterProps
             {
-                ClusterName = "PersonalSecOpsEcs",
+                ClusterName = "PersonalCloudEcs",
                 Vpc = vpc
             });
 
             return ecsCluster;
         }
 
-        #endregion
-
-        #region Nextcloud
-
         private (RDS.IDatabaseInstance, SM.ISecret) CreateMySQL(EC2.IVpc vpc)
         {
             var allocatedStorage = _configuration.GetValue<double>("AWS:RDS:MySQL:AllocatedStorage");
-            var databaseName = _configuration.GetValue<string>("Nextcloud:DatabaseName");
+            var databaseName = _configuration.GetValue<string>("AWS:RDS:MySQL:DatabaseName");
             var userName = _configuration.GetValue<string>("AWS:RDS:MySQL:MasterUser:Username");
             var port = _configuration.GetValue<int>("AWS:RDS:MySQL:Port");
             var passwordLength = _configuration.GetValue<int>("AWS:RDS:MySQL:MasterUser:PasswordLength");
@@ -81,7 +75,7 @@ namespace PersonalSecOps
             var instanceSize = _configuration.GetValue<EC2.InstanceSize>("AWS:RDS:MySQL:InstanceSize");
             var storageEncrypted = _configuration.GetValue<bool>("AWS:RDS:MySQL:StorageEncrypted");
 
-            var password = new SM.Secret(this, "PersonalSecOpsRdsMySqlPassword", new SM.SecretProps
+            var password = new SM.Secret(this, "PersonalCloudRdsMySqlPassword", new SM.SecretProps
             {
                 SecretName = "MySqlMasterUserPassword",
                 GenerateSecretString = new SM.SecretStringGenerator
@@ -92,7 +86,7 @@ namespace PersonalSecOps
                 }
             });
 
-            var securityGroup = new EC2.SecurityGroup(this, "PersonalSecOpsRdsMySqlSecurityGroup", new EC2.SecurityGroupProps
+            var securityGroup = new EC2.SecurityGroup(this, "PersonalCloudRdsMySqlSecurityGroup", new EC2.SecurityGroupProps
             {   
                 Description = "RDS MySQL",
                 Vpc = vpc
@@ -101,7 +95,7 @@ namespace PersonalSecOps
             securityGroup.AddEgressRule(EC2.Peer.AnyIpv4(), EC2.Port.AllTraffic(), "All traffic");
             securityGroup.AddIngressRule(EC2.Peer.AnyIpv4(), EC2.Port.Tcp(port), "MySQL");
 
-            var database = new RDS.DatabaseInstance(this, "PersonalSecOpsRdsMySqlInstance", new RDS.DatabaseInstanceProps
+            var database = new RDS.DatabaseInstance(this, "PersonalCloudRdsMySqlInstance", new RDS.DatabaseInstanceProps
             {
                 AllocatedStorage = allocatedStorage,
                 BackupRetention = Duration.Days(backupRetentionDays),
@@ -112,7 +106,7 @@ namespace PersonalSecOps
                 InstanceClass = EC2.InstanceType.Of(instanceClass, instanceSize),
                 MasterUsername = userName,
                 MasterUserPassword = password.SecretValue,
-                ParameterGroup = new RDS.ParameterGroup(this, "PersonalSecOpsRdsMySqlParamGroup", new RDS.ParameterGroupProps
+                ParameterGroup = new RDS.ParameterGroup(this, "PersonalCloudRdsMySqlParamGroup", new RDS.ParameterGroupProps
                 {
                     Family = "mysql8.0",
                     Parameters = new Dictionary<string, string>
@@ -152,7 +146,7 @@ namespace PersonalSecOps
             var adminUsername = _configuration.GetValue<string>("Nextcloud:AdminUser:Username");
             var adminPasswordLength = _configuration.GetValue<int>("Nextcloud:AdminUser:PasswordLength");
 
-            var adminPassword = new SM.Secret(this, "PersonalSecOpsNextcloudAdminPassword", new SM.SecretProps
+            var adminPassword = new SM.Secret(this, "PersonalCloudNextcloudAdminPassword", new SM.SecretProps
             {
                 SecretName = "NextcloudAdminPassword",
                 GenerateSecretString = new SM.SecretStringGenerator
@@ -196,10 +190,6 @@ namespace PersonalSecOps
             return nextcloudService;
         }
 
-        #endregion
-
-        #region OWASP JuiceShop
-
         private ECS.Patterns.ApplicationLoadBalancedFargateService CreateJuiceShop(ECS.ICluster ecsCluster, R53.IHostedZone zone)
         {
             var containerImage = _configuration.GetValue<string>("JuiceShop:ContainerImage");
@@ -229,6 +219,8 @@ namespace PersonalSecOps
             return juiceShop;
         }
 
-        #endregion
+        // TODO: Pi-hole
+
+        // TODO: WordPress
     }
 }

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PersonalSecOps
+namespace PersonalCloud
 {
     sealed class Program
     {
@@ -16,7 +16,7 @@ namespace PersonalSecOps
                 .Build();
 
             var app = new App();
-            var stack = new PersonalSecOpsStack(configuration, app, "PersonalSecOpsStack");
+            var stack = new PersonalSecOpsStack(configuration, app, "PersonalCloudStack");
             app.Synth();
         }
     }
